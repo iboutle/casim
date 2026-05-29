@@ -3,7 +3,7 @@ module autoconversion
   use passive_fields, only: rho
   use mphys_switches, only: i_ql, i_qr, i_nl, i_nr, l_2mc, &
        l_2mr, l_aaut, i_am4, i_am5, cloud_params, rain_params, l_process, &
-       l_separate_rain, l_preventsmall, l_prf_cfrac, i_cfl, l_kk00
+       l_separate_rain, l_preventsmall, l_prf_cfrac, i_cfl, l_kk00, l_inhomog
 ! use mphys_switches, only: m3r, l_3mr
   use mphys_constants, only: fixed_cloud_number
   use mphys_parameters, only: rain_params
@@ -22,7 +22,7 @@ module autoconversion
   public raut
 contains
 
-  subroutine raut(ixy_inner, dt, qfields, cffields, aerofields, procs, aerosol_procs)
+  subroutine raut(ixy_inner, dt, qfields, cffields, aerofields, fsd_l, procs, aerosol_procs)
 
     USE yomhook, ONLY: lhook, dr_hook
     USE parkind1, ONLY: jprb, jpim
@@ -32,7 +32,7 @@ contains
     ! Subroutine arguments
     integer, intent(in) :: ixy_inner
     real(wp), intent(in) :: dt
-    real(wp), intent(in) :: qfields(:,:), aerofields(:,:),    cffields(:,:)
+    real(wp), intent(in) :: qfields(:,:), aerofields(:,:), cffields(:,:), fsd_l(:)
     type(process_rate), intent(inout), target :: procs(:,:)
     type(process_rate), intent(inout), target :: aerosol_procs(:,:)
 
@@ -45,6 +45,7 @@ contains
 !   real(wp) :: k1, k2, k3
     real(wp) :: mu_qc ! < cloud shape parameter (currently only used diagnostically here)
     real(wp) :: cf_liquid
+    real(wp) :: bias
 
     integer :: k
     character(len=*), parameter :: RoutineName='RAUT'
@@ -91,6 +92,11 @@ contains
       if (l_kk00) then
          dmass = 1350.*cloud_mass**2.47*  &
               (cloud_number/1.e6*rho(k,ixy_inner))**(-1.79)
+         if (l_inhomog) then
+           bias = ((1.0+fsd_l(k)**2)**(-0.5*2.47))*                            &
+                ((1.0+fsd_l(k)**2)**(0.5*2.47**2))
+           dmass = dmass * bias
+         end if
       else
          ! new method, k13 scheme
          dmass = 7.98e10*cloud_mass**4.22*  &

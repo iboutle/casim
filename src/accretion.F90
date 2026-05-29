@@ -4,7 +4,7 @@ module accretion
 ! use mphys_switches, only: i_m3r, l_3mr
   use mphys_switches, only: i_ql, i_qr, i_nl, l_2mc, &
        l_aacc, i_am4, i_am5, l_process, active_rain, isol, l_preventsmall, &
-       l_prf_cfrac, i_cfl, i_cfr, l_kk00
+       l_prf_cfrac, i_cfl, i_cfr, l_kk00, l_inhomog
   use mphys_constants, only: fixed_cloud_number
   use mphys_parameters, only: hydro_params
 ! use mphys_parameters, only: p1, p2, p3, rain_params
@@ -14,6 +14,7 @@ module accretion
   use distributions, only: dist_lambda, dist_mu, dist_n0
 ! use m3_incs, only: m3_inc_type2
   use casim_stph, only: l_rp2_casim, fixed_cloud_number_rp
+  use mphys_inputs_mod, only: c_r_correl
 
   implicit none
 
@@ -31,7 +32,7 @@ contains
   !> This subroutine calculates increments due to the accretion of
   !> cloud water by rain
   !--------------------------------------------------------------------------- !
-  subroutine racw(ixy_inner, dt, qfields, cffields, aerofields, procs, params, aerosol_procs)
+  subroutine racw(ixy_inner, dt, qfields, cffields, aerofields, fsd_l, fsd_r, procs, params, aerosol_procs)
 
     USE yomhook, ONLY: lhook, dr_hook
     USE parkind1, ONLY: jprb, jpim
@@ -46,6 +47,7 @@ contains
     real(wp), intent(in) :: qfields(:,:)     !< hydrometeor fields
     real(wp), intent(in) :: cffields(:,:)     ! < cloud fractions
     real(wp), intent(in) :: aerofields(:,:)  !< aerosol fields
+    real(wp), intent(in) :: fsd_l(:), fsd_r(:)
     type(process_rate), intent(inout), target :: procs(:,:)         !< hydrometeor process rates
     type(process_rate), intent(inout), target :: aerosol_procs(:,:) !< aerosol process rates
     type(hydro_params), intent(in) :: params !< parameters describing hydrometor size distribution/fallspeeds etc.
@@ -63,7 +65,7 @@ contains
     real(wp) :: cf_liquid, cf_rain
 
 
-    real(wp) :: mu, n0, lam
+    real(wp) :: mu, n0, lam, bias
     logical :: l_kk_acw=.true.
 
     integer :: k ! local index for k
@@ -120,7 +122,18 @@ contains
              !        dmass=min(0.9*cloud_mass, 67.0*(cloud_mass*rain_mass)**1.15)
              if (l_kk00) then
                 ! Use KK accretion parametrisation but limit to 90% of cloud mass removal
-                dmass = MIN(0.9*cloud_mass, 67.0*(cloud_mass*rain_mass)**1.15)
+                dmass = 67.0*(cloud_mass*rain_mass)**1.15
+                if (l_inhomog) then
+                  bias = ((1.0+fsd_l(k)**2)**(-0.5*1.15))*                     &
+                       ((1.0+fsd_l(k)**2)**(0.5*1.15**2))*                     &
+                       ((1.0+fsd_r(k)**2)**(-0.5*1.15))*                       &
+                       ((1.0+fsd_r(k)**2)**(0.5*1.15**2))*                     &
+                       exp(c_r_correl*1.15*1.15*                               &
+                       sqrt(log(1.0+fsd_l(k)**2)*                              &
+                       log(1.0+fsd_r(k)**2)))
+                  dmass = dmass * bias
+                end if
+                dmass = MIN(0.9*cloud_mass, dmass)
              else
                 ! Use Kogan(2013) accretion parametrisation but limit to 90% 
                 ! of cloud mass removal

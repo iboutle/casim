@@ -411,7 +411,7 @@ contains
        theta, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13,       &
        a14, a15, a16, a17, a18, a19, a20,                                   &
        exner, pressure, rho, w, tke, dz,                                    &
-       cfliq, cfice, cfsnow, cfrain, cfgr,    &
+       cfliq, cfice, cfsnow, cfrain, cfgr, fsd_l, fsd_r,                    &
        dqv, dq1, dq2, dq3, dq4, dq5, dq6, dq7, dq8, dq9, dq10, dq11, dq12,  &
        dq13, dth, da1, da2, da3, da4, da5, da6, da7, da8, da9, da10, da11,  &
        da12, da13, da14, da15, da16, da17,                                  &
@@ -439,7 +439,7 @@ contains
          , q12( kl:ku, il:iu, jl:ju ), q13( kl:ku, il:iu, jl:ju )
 
     real(wp) :: cfliq(kl:ku, il:iu, jl:ju ), cfrain(kl:ku, il:iu, jl:ju ), cfice(kl:ku, il:iu, jl:ju ), &
-                cfsnow(kl:ku, il:iu, jl:ju ), cfgr(kl:ku, il:iu, jl:ju )
+                cfsnow(kl:ku, il:iu, jl:ju ), cfgr(kl:ku, il:iu, jl:ju ), fsd_l(kl:ku), fsd_r(kl:ku)
 
 
 
@@ -669,7 +669,7 @@ contains
             dt, &
             !i , j,
             ! To be calculated so no need anymore
-            qfields, cffields, dqfields, tend, procs &
+            qfields, cffields, fsd_l, fsd_r, dqfields, tend, procs &
             !, precip(i,j)
             , precip &
             , precip_l, precip_r, precip_i, precip_s, precip_g       &
@@ -858,7 +858,7 @@ contains
        , ixy_outer, is_in, js_in, je_in &
        , dt &
        !ix, jy,
-       , qfields, cffields, dqfields, tend &
+       , qfields, cffields, fsd_l, fsd_r, dqfields, tend &
        , procs, precip, precip_l, precip_r, precip_i, precip_s, precip_g      &
        , precip_r1d, precip_s1d, precip_so1d, precip_g1d                      &
        , aerophys, aerochem, aeroact                                          &
@@ -884,6 +884,7 @@ contains
     real(wp), intent(in) :: rhcrit_1d(:)
     real(wp), intent(inout) :: qfields(:,:,:), dqfields(:,:,:), tend(:,:,:)
     real(wp), intent(in) :: cffields(:,:,:)
+    real(wp), intent(in) :: fsd_l(:), fsd_r(:)
 
     type(process_rate), intent(inout) :: procs(:,:,:)
     ! real(wp), intent(out) :: precip
@@ -1208,7 +1209,7 @@ contains
           !-------------------------------
           if (pswitch%l_praut) then
              call raut(ixy_inner, step_length, qfields(:,:,ixy_inner),         &
-               cffields(:,:,ixy_inner), aerofields(:,:,ixy_inner),             &
+               cffields(:,:,ixy_inner), aerofields(:,:,ixy_inner), fsd_l,      &
                procs(:,:,ixy_inner), aerosol_procs(:,:,ixy_inner))
           end if
 
@@ -1217,7 +1218,7 @@ contains
           !-------------------------------
           if (pswitch%l_pracw) then
              call racw(ixy_inner, step_length, qfields(:,:,ixy_inner),         &
-               cffields(:,:,ixy_inner), aerofields(:,:,ixy_inner),             &
+               cffields(:,:,ixy_inner), aerofields(:,:,ixy_inner), fsd_l,fsd_r,&
                procs(:,:,ixy_inner), rain_params, aerosol_procs(:,:,ixy_inner))
           end if
 

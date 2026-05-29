@@ -63,7 +63,7 @@ module mphys_switches
   logical :: l_adjust_D0 = .true.  !adjust the psd in distributions
   
   logical :: l_kk00 = .true.  ! true=use KK2000 autoconv+accretion, false=use KK2013
-
+  logical :: l_inhomog = .true.
 ! Flag to decide whether to transfer the evaporating aerosol based on whether 
 ! it is less or more than halfway between the sizes of accum and coarse modes
 ! This is True (Dan Grosvenor Bug) in the package branch
