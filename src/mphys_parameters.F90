@@ -345,8 +345,10 @@ module mphys_parameters
   real(wp) :: mu_saut=2.0 ! initial mu for autoconversion ice to snow
 
   ! ventilation coefficients
-  real(wp) :: vent_1=0.65
-  real(wp) :: vent_2=0.44
+!  real(wp) :: vent_1=0.65
+!  real(wp) :: vent_2=0.44
+  real(wp) :: vent_1=1    !beard and prupacher 1971 -check
+  real(wp) :: vent_2=0.108!beard and prupacher 1971 -check
 
   ! cloud droplet activation
   ! Twomey law C1s^K1
