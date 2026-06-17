@@ -242,7 +242,7 @@ contains
                 
                 !limit production to 1/cc in timestep - do this properly with KL but need to adapt for droplets
                 if (l_use_ni_limit) then
-                   dnumberi=min(dnumber, 1e2)
+                   dnumberi=min(dnumber, 1e1)
                    dmass=qfields(k, i_ql)*dnumberi/qfields(k, i_nl)
                 endif
                 
