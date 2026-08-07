@@ -237,7 +237,8 @@ contains
         betai(imode)=0.5      !aerochem%beta(imode) This is set to 0.5 for
                               !    Shipway not for ARG
         !print *, 'imode, bi', bi(imode), imode, Ak,betai(imode),rdi(imode)
-        if (rdi(imode) > epsilon(1.0_wp)) then
+        if (rdi(imode) > epsilon(1.0_wp) .and. &
+             bi(imode) > epsilon(1.0_wp)) then
            s0i(imode) = rdi(imode)**(-(1.0+betai(imode))) * &
                 sqrt(4.0*Ak**3.0/(27.0*bi(imode)))
         else
