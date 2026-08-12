@@ -742,7 +742,7 @@ contains
     rsmax2=0.0
 
     do i=1, phys%nmodes
-      if (phys%N(i) > ccn_tidy .and. phys%M(i) > ccn_tidy*epsilon(1.0_wp)) then
+      if (phys%N(i) > ccn_tidy) then
         if(l_ukca_casim) then
           Bk =chem%bk(i)
         else
